@@ -1,0 +1,20 @@
+{
+  "name": "pop-choice-server",
+  "version": "1.0.0",
+  "description": "This is express server for my project pop-choice, a movie suggester AI.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "codeXanuj",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "openai": "^4.96.0"
+  }
+}
