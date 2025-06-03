@@ -38,7 +38,7 @@ router.post("/", async (req, res) => {
       throw error;
     }
 
-        res.status(200).json({
+      res.status(200).json({
       success: true,
       message: "Embedding stored successfully",
       storedData: data, // optional: return what was stored
@@ -48,5 +48,29 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "Embedding generation failed" });
   }
 });
+
+{/*to make embeddings of user input */}
+
+router.post("/userInputs", async (req, res) => {
+  const {input} = req.body;
+  console.log(input)
+  if (!input) return  res.status(400).json({error: "Missing user input text"})
+
+  try {
+    const inputEmbeddings = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: input
+    });
+    const embeddings = inputEmbeddings.data[0].embedding;
+
+    res.status(200).json({
+      success: true,
+      message: "Embedding done successfully",
+      embeddings: embeddings
+    })
+  } catch (err) {
+    console.error("error occuring:", err.message)
+  }
+})
 
 export default router;
