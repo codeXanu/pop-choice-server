@@ -41,7 +41,7 @@ router.post("/", async (req, res) => {
       res.status(200).json({
       success: true,
       message: "Embedding stored successfully",
-      storedData: data, // optional: return what was stored
+      storedData: data, 
     });
   } catch (err) {
     console.error("Error inserting into Supabase:", err.message);
@@ -49,11 +49,45 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+
+async function generateRecommendation({ userInfo, matchedMovie }) {
+  const messages = [
+    {
+      role: "system",
+      content: `You are a friendly movie expert. The user will give you:
+- a short phrase with their favorite movie and what kind of movie they want to watch next (new/classic, genre, vibe).
+- a suggested movie with full description.
+
+Reply with a short, human-sounding recommendation using the suggested movie that fits the user’s preferences.`
+    },
+    {
+      role: "user",
+      content: `User preferences: ${userInfo}\nSuggested movie: ${matchedMovie}`
+    }
+  ];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages,
+      temperature: 0.7,
+      max_tokens: 200
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error("Chat completion error:", error.message);
+    return "Sorry, I couldn’t create a movie suggestion at the moment.";
+  }
+}
+
+
 {/*to make embeddings of user input */}
 
 router.post("/userInputs", async (req, res) => {
   const {input} = req.body;
-  console.log(input)
+  // console.log(input)
   if (!input) return  res.status(400).json({error: "Missing user input text"})
 
   try {
@@ -63,10 +97,23 @@ router.post("/userInputs", async (req, res) => {
     });
     const embeddings = inputEmbeddings.data[0].embedding;
 
+    const { data } = await supabase.rpc('match_documents', {
+      query_embedding: embeddings,
+      match_threshold: 0.30,
+      match_count: 1
+    });
+
+    const matchedMovie = data[0].content;
+  
+    const recommendation = await generateRecommendation({ userInfo: input, matchedMovie });
+  
+
     res.status(200).json({
       success: true,
-      message: "Embedding done successfully",
-      embeddings: embeddings
+      // message: "Embedding done successfully",
+      // embeddings: embeddings,
+      // results: data,
+      recommendation
     })
   } catch (err) {
     console.error("error occuring:", err.message)
